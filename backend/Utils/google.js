@@ -24,9 +24,9 @@ passport.use(
         return done(null, user);
       } else {
         const isType = defineSocialUser(request.body.type);
-        const newUser = new SocialStudent({
-          // type: request.body.type,
-          // isIndividual: request.body.isIndividual,
+        const newUser = new isType({
+          type: request.body.type,
+          isIndividual: request.body.isIndividual,
           name: profile.name.givenName + " " + profile.name.familyName,
           email: profile.emails[0].value,
           avatar: profile.photos[0].value,

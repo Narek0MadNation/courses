@@ -16,18 +16,15 @@ passport.use(
       profileFields: ["name", "email", "picture"], // ["emails", "displayName", "name", "picture"],
     },
     async (request, accessToken, refreshToken, profile, done) => {
-      //  (await SocialTeacher.findOne({ email: req.body.email }))
-      // ? await SocialTeacher.findOne({ email: profile.emails[0].value })
-      const user = await SocialStudent.findOne({
-        email: profile.emails[0].value,
-      });
+      const user = await getSocialUser(profile.emails[0].value);
 
       if (user) {
         return done(null, user);
       } else {
-        const newUser = new SocialStudent({
-          // type: request.body.type,
-          // isIndividual: request.body.isIndividual,
+        const isType = defineSocialUser(request.body.type);
+        const newUser = new isType({
+          type: request.body.type,
+          isIndividual: request.body.isIndividual,
           name: profile.name.givenName + " " + profile.name.familyName,
           email: profile.emails[0].value,
           avatar: profile.photos[0].value,
@@ -38,7 +35,6 @@ passport.use(
     }
   )
 );
-
 passport.serializeUser(async (user, done) => {
   console.log("SERIALIZE USER ID", user);
   done(null, user.id);
