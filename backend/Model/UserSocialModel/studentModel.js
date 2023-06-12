@@ -1,22 +1,38 @@
-import mongoose from "mongoose";
+import { Schema, model } from "mongoose";
 
-const studentSchema = new mongoose.Schema(
+const studentSchema = new Schema(
   {
-    type: { type: String, default: "student" }, // required: true,
-    isIndividual: { type: Boolean }, // default: true??, required: true
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    role: {
-      user: { type: Boolean, required: true, default: true },
-      admin: { type: Boolean, required: true, default: false },
+    type: {
+      type: String,
+      required: true,
+      enum: ["student"],
+      default: "student",
     },
-    avatar: { type: String, required: false },
-    phone: { type: String, required: false },
-    address: { type: String, required: false },
+    isIndividual: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
+    name: { type: String, required: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    role: {
+      type: String,
+      required: true,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+    avatar: { type: String, default: "" },
+    phone: { type: String, default: "" },
+    address: { type: String, default: "" },
     age: { type: String, required: false },
-    languages: [],
+    languages: { type: [String], default: [] },
     stage: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Stage",
       required: false,
     },
@@ -26,6 +42,6 @@ const studentSchema = new mongoose.Schema(
   }
 );
 
-const SocialStudent = mongoose.model("SocialStudent", studentSchema);
+const SocialStudent = model("SocialStudent", studentSchema);
 
 export default SocialStudent;

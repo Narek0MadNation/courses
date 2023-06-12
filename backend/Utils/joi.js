@@ -35,7 +35,8 @@ export const LoginValidate = (body) => {
 export const StudentProfileValidate = (body) => {
   const schema = Joi.object({
     // _id: Joi.string().required().label("ID"),
-    name: Joi.string().required().label("Name"),
+    name: Joi.string().label("Name"),
+    avatar: Joi.string().label("Avatar"),
     phone: Joi.string().required().label("Phone"),
     address: Joi.string().required().label("Address"),
     age: Joi.string().required().label("Age"),

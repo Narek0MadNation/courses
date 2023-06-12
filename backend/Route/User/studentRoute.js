@@ -46,17 +46,24 @@ const studentRouter = express.Router();
 studentRouter.post(
   "/:id/profile",
   expressAsyncHandler(async (req, res) => {
-    const { error } = StudentProfileValidate(req.body);
-    if (error)
+    try {
+      const { error } = StudentProfileValidate(req.body);
+      if (error)
+        return res
+          .status(400)
+          .send({ error: true, message: error.details[0].message });
+      const profile = await Student.findOneAndUpdate(
+        // { _id: req.body._id },
+        { _id: req.params.id },
+        { ...req.body }
+      );
+      res.status(201).send(profile);
+    } catch (error) {
+      console.error(error);
       return res
-        .status(400)
-        .send({ error: true, message: error.details[0].message });
-    const profile = await Student.findOneAndUpdate(
-      // { _id: req.body._id },
-      { _id: req.params.id },
-      { ...req.body }
-    );
-    res.status(201).send(profile);
+        .status(500)
+        .send({ error: true, message: "Internal Server Error" });
+    }
   })
 );
 
@@ -85,8 +92,18 @@ studentRouter.post(
 studentRouter.get(
   "/:id",
   expressAsyncHandler(async (req, res) => {
-    const user = await Student.findById(req.params.id);
-    user ? res.send(user) : res.status(404).send({ message: "User not found" });
+    try {
+      const user = await Student.findById(req.params.id);
+      if (user) {
+        return res.send(user);
+      }
+      return res.status(404).send({ message: "User not found" });
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(500)
+        .json({ error: true, message: "Internal Server Error" });
+    }
   })
 );
 
@@ -115,11 +132,19 @@ studentRouter.get(
 studentRouter.get(
   "/:id/subscriptions",
   expressAsyncHandler(async (req, res) => {
-    const user = await Subscribe.find({ studentId: req.params.id });
-    if (!user) return res.status(404).send({ message: "No Subscriptions" }); // redirect
-    const courseId = user.map((item) => item.courseId);
-    const course = await Course.find({ _id: courseId });
-    res.status(200).send(course);
+    try {
+      const subscriptions = await Subscribe.find({ studentId: req.params.id });
+      if (subscriptions.length === 0)
+        return res.status(404).send({ message: "No Subscriptions" }); // redirect
+      const courseIds = subscriptions.map((item) => item.courseId);
+      const courses = await Course.find({ _id: { $in: courseIds } });
+      res.status(200).send(courses);
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(500)
+        .json({ error: true, message: "Internal Server Error" });
+    }
   })
 );
 
@@ -154,13 +179,21 @@ studentRouter.get(
 studentRouter.delete(
   "/:id/unsubscribe",
   expressAsyncHandler(async (req, res) => {
-    const user = await Subscribe.findOne({ studentId: req.params.id });
-    if (!user) return res.status(404).send({ message: "Please login" }); // redirect
-    const course = await Course.findOne({ _id: req.body.courseId });
-    const unsubscribe = await Subscribe.findOneAndDelete({
-      courseId: req.body.courseId,
-    });
-    res.status(200).send({ message: `You unsubscribed ${course.title}` });
+    try {
+      const user = await Subscribe.findOne({ studentId: req.params.id });
+      if (!user) return res.status(404).send({ message: "Please login" }); // redirect
+      const course = await Course.findOne({ _id: req.body.courseId });
+      if (!course) return res.status(404).send({ message: "Course not found" });
+      const unsubscribe = await Subscribe.findOneAndDelete({
+        courseId: req.body.courseId,
+      });
+      res.status(200).send({ message: `You unsubscribed ${course.title}` });
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(500)
+        .json({ error: true, message: "Internal Server Error" });
+    }
   })
 );
 

@@ -1,23 +1,39 @@
-import mongoose from "mongoose";
+import { Schema, model } from "mongoose";
 
-const studentSchema = new mongoose.Schema(
+const studentSchema = new Schema(
   {
-    type: { type: String, required: true, default: "student" },
-    isIndividual: { type: Boolean, required: true }, // default: true??
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: false },
-    role: {
-      user: { type: Boolean, required: true, default: true },
-      admin: { type: Boolean, required: true, default: false },
+    type: {
+      type: String,
+      required: true,
+      enum: ["student"],
+      default: "student",
     },
-    avatar: { type: String, required: false },
-    phone: { type: String, required: false },
-    address: { type: String, required: false },
+    isIndividual: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
+    name: { type: String, required: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    password: { type: String, default: "" },
+    role: {
+      type: String,
+      required: true,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+    avatar: { type: String, default: "" },
+    phone: { type: String, default: "" },
+    address: { type: String, default: "" },
     age: { type: String, required: false },
-    languages: [],
+    languages: { type: [String], default: [] },
     stage: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Stage",
       required: false,
     },
@@ -27,6 +43,6 @@ const studentSchema = new mongoose.Schema(
   }
 );
 
-const Student = mongoose.model("Student", studentSchema);
+const Student = model("Student", studentSchema);
 
 export default Student;

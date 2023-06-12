@@ -1,33 +1,49 @@
-import mongoose from "mongoose";
+import { Schema, model } from "mongoose";
 
-const teacherSchema = new mongoose.Schema(
+const teacherSchema = new Schema(
   {
-    type: { type: String, required: true, default: "teacher" },
-    isIndividual: { type: Boolean, required: true, default: true },
+    type: {
+      type: String,
+      required: true,
+      enum: ["teacher"],
+      default: "teacher",
+    },
+    isIndividual: {
+      type: Boolean,
+      required: true,
+      default: true,
+    },
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true }, // lowercase: true
-    password: { type: String, required: false },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+    },
+    password: { type: String, default: "" },
     role: {
-      user: { type: Boolean, required: true, default: true },
-      admin: { type: Boolean, required: true, default: false },
+      type: String,
+      required: true,
+      enum: ["user", "admin"],
+      default: "user",
     },
     personalInfo: {
-      phone: { type: String, required: false },
-      address: { type: String, required: false },
-      avatar: { type: String, required: false },
+      phone: { type: String, default: "" },
+      address: { type: String, default: "" },
+      avatar: { type: String, default: "" },
       age: { type: String, required: false },
-      about: { type: String, required: false },
-      languages: [],
+      about: { type: String, default: "" },
+      languages: { type: [String], default: [] },
     },
     courses: [
       {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "Course",
         required: false,
       },
     ],
     stage: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Stage",
       required: false,
     },
@@ -37,6 +53,6 @@ const teacherSchema = new mongoose.Schema(
   }
 );
 
-const Teacher = mongoose.model("Teacher", teacherSchema);
+const Teacher = model("Teacher", teacherSchema);
 
 export default Teacher;

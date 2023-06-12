@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
+import { Schema, model } from "mongoose";
 
-const stageSchema = new mongoose.Schema(
+const stageSchema = new Schema(
   {
     stageName: { type: String, required: true },
     stageType: { type: String, required: true },
@@ -11,6 +11,6 @@ const stageSchema = new mongoose.Schema(
   }
 );
 
-const Stage = mongoose.model("Stage", stageSchema);
+const Stage = model("Stage", stageSchema);
 
 export default Stage;

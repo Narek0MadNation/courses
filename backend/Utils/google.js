@@ -3,7 +3,7 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth2";
 import SocialStudent from "../Model/UserSocialModel/studentModel.js";
 import SocialTeacher from "../Model/UserSocialModel/teacherModel.js";
-import { defineSocialUser, getSocialUser } from "./log.js";
+import { defineSocialUser, getSocialUser } from "../Middleware/log.js";
 
 const GOOGLE_CLIENT_ID =
   "628055254233-93mib7ha2871m853f1u14hqhps5f5cia.apps.googleusercontent.com";

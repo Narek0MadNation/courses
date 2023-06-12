@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 
 const phaseSchema = new mongoose.Schema(
   {
-    phaseTitle: { type: String, required: true },
+    phaseTitle: {
+      type: String,
+      required: true,
+    },
     lesson: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -15,7 +18,11 @@ const phaseSchema = new mongoose.Schema(
       ref: "Exam",
       required: false,
     },
-    course: { type: String, required: true },
+    courseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
+    },
   },
   {
     timestamps: true,
