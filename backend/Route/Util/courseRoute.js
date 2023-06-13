@@ -49,11 +49,16 @@ courseRouter.get(
     const page = req.query.page || 0;
     const limit = 4;
 
-    const course = await Course.find()
-      .skip(page * limit)
-      .limit(limit);
-    res.send(course);
-    return;
+    try {
+      const course = await Course.find()
+        .skip(page * limit)
+        .limit(limit);
+
+      return res.status(200).send(course);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -82,8 +87,15 @@ courseRouter.get(
 courseRouter.get(
   "/:id",
   expressAsyncHandler(async (req, res) => {
-    const course = await Course.findById(req.params.id).populate("phases");
-    course ? res.send(course) : res.status(404).send({ message: "Not Found" });
+    try {
+      const course = await Course.findById(req.params.id).populate("phases");
+      return course
+        ? res.status(200).send(course)
+        : res.status(404).send({ message: "Not Found" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -112,14 +124,22 @@ courseRouter.get(
 courseRouter.get(
   "/phase/:id",
   expressAsyncHandler(async (req, res) => {
-    const phase = await Phase.findById(req.params.id).populate({
-      path: "lesson",
-      populate: {
-        path: "homework",
-        model: "Homework",
-      },
-    });
-    phase ? res.send(phase) : res.status(404).send({ message: "Not Found" });
+    try {
+      const phase = await Phase.findById(req.params.id).populate({
+        path: "lesson",
+        populate: {
+          path: "homework",
+          model: "Homework",
+        },
+      });
+
+      return phase
+        ? res.status(200).send(phase)
+        : res.status(404).send({ message: "Not Found" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -148,8 +168,16 @@ courseRouter.get(
 courseRouter.get(
   "/lesson/:id",
   expressAsyncHandler(async (req, res) => {
-    const lesson = await Lesson.findById(req.params.id);
-    lesson ? res.send(lesson) : res.status(404).send({ message: "Not Found" });
+    try {
+      const lesson = await Lesson.findById(req.params.id);
+
+      return lesson
+        ? res.status(200).send(lesson)
+        : res.status(404).send({ message: "Not Found" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -178,10 +206,15 @@ courseRouter.get(
 courseRouter.get(
   "/homework/:id",
   expressAsyncHandler(async (req, res) => {
-    const homework = await Homework.findById(req.params.id);
-    homework
-      ? res.send(homework)
-      : res.status(404).send({ message: "Not Found" });
+    try {
+      const homework = await Homework.findById(req.params.id);
+      return homework
+        ? res.status(200).send(homework)
+        : res.status(404).send({ message: "Not Found" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -210,8 +243,16 @@ courseRouter.get(
 courseRouter.get(
   "/exam/:id",
   expressAsyncHandler(async (req, res) => {
-    const exam = await Exam.findById(req.params.id);
-    exam ? res.send(exam) : res.status(404).send({ message: "Not Found" });
+    try {
+      const exam = await Exam.findById(req.params.id);
+
+      return exam
+        ? res.status(200).send(exam)
+        : res.status(404).send({ message: "Not Found" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -245,23 +286,45 @@ courseRouter.post(
       return res
         .status(400)
         .send({ error: true, message: error.details[0].message });
-    const courseExists = await Course.findOne({
-      title: req.body.title,
-    });
-    if (courseExists) return res.json({ message: "Course already exist" });
-    const course = await new Course({ ...req.body }).save();
-    if (req.body.teacher) {
-      const teacher = await Teacher.updateOne(
-        { _id: course.teacher },
-        { $push: { courses: course._id } }
-      );
-    } else {
-      const company = await Company.updateOne(
-        { _id: course.company },
-        { $push: { courses: course._id } }
-      );
+    try {
+      const courseExists = await Course.findOne({
+        title: req.body.title,
+      });
+
+      if (courseExists)
+        return res.status(409).send({ message: "Course already exist" });
+
+      const course = await new Course({ ...req.body }).save();
+
+      // if (req.body.teacher) {
+      //   const teacher = await Teacher.updateOne(
+      //     { _id: course.teacher },
+      //     { $push: { courses: course._id } }
+      //   );
+      // } else {
+      //   const company = await Company.updateOne(
+      //     { _id: course.company },
+      //     { $push: { courses: course._id } }
+      //   );
+      // }
+
+      if (req.body.teacher) {
+        await Teacher.findByIdAndUpdate(course.teacher, {
+          $push: { courses: course._id },
+        });
+      } else {
+        await Company.findByIdAndUpdate(course.company, {
+          $push: { courses: course._id },
+        });
+      }
+
+      return res
+        .status(201)
+        .send({ error: false, message: "Course created", course });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
     }
-    res.status(201).send({ error: false, message: "Course created", course });
   })
 );
 
@@ -295,16 +358,33 @@ courseRouter.post(
       return res
         .status(400)
         .send({ error: true, message: error.details[0].message });
-    const phaseExists = await Phase.findOne({
-      phaseTitle: req.body.phaseTitle,
-    });
-    if (phaseExists) return res.json({ message: "Phase already exist" });
-    const phase = await new Phase({ ...req.body }).save();
-    const course = await Course.updateOne(
-      { _id: phase.course },
-      { $push: { phases: phase._id } }
-    );
-    res.status(201).send({ error: false, message: "Phase created", phase });
+
+    try {
+      const phaseExists = await Phase.findOne({
+        phaseTitle: req.body.phaseTitle,
+      });
+
+      if (phaseExists)
+        return res.status(409).send({ message: "Phase already exist" });
+
+      const phase = await new Phase({ ...req.body }).save();
+
+      // const course = await Course.updateOne(
+      //   { _id: phase.courseId },
+      //   { $push: { phases: phase._id } }
+      // );
+
+      const course = await Course.findByIdAndUpdate(phase.courseId, {
+        $push: { phases: phase._id },
+      });
+
+      return res
+        .status(201)
+        .send({ error: false, message: "Phase created", phase });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -338,16 +418,35 @@ courseRouter.post(
       return res
         .status(400)
         .send({ error: true, message: error.details[0].message });
-    const lessonExists = await Lesson.findOne({
-      lessonTitle: req.body.lessonTitle,
-    });
-    if (lessonExists) return res.json({ message: "Lesson already exist" });
-    const lesson = await new Lesson({ ...req.body }).save();
-    const phase = await Phase.updateOne(
-      { _id: lesson.phase },
-      { $push: { lesson: lesson._id } }
-    );
-    res.status(201).send({ error: false, message: "Lesson created", lesson });
+
+    try {
+      const lessonExists = await Lesson.findOne({
+        lessonTitle: req.body.lessonTitle,
+      });
+
+      if (lessonExists)
+        return res.status(409).send({ message: "Lesson already exists" });
+
+      const lesson = await Lesson.create({ ...req.body });
+
+      // const phase = await Phase.updateOne(
+      //   { _id: lesson.phase },
+      //   { $push: { lesson: lesson._id } }
+      // );
+
+      await Phase.findByIdAndUpdate(lesson.phase, {
+        $push: { lesson: lesson._id },
+      });
+
+      return res
+        .status(201)
+        .send({ error: false, message: "Lesson created", lesson });
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(500)
+        .send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -381,16 +480,25 @@ courseRouter.post(
       return res
         .status(400)
         .send({ error: true, message: error.details[0].message });
-    const homework = await new Homework({ ...req.body }).save();
-    const lesson = await Lesson.updateOne(
-      { _id: homework.lesson },
-      { $push: { homework: homework._id } }
-    );
-    res.status(201).send({
-      error: false,
-      message: "Homework created",
-      homework,
-    });
+
+    try {
+      const homework = await new Homework({ ...req.body }).save();
+
+      // const lesson = await Lesson.updateOne(
+      //   { _id: homework.lesson },
+      //   { $push: { homework: homework._id } }
+      // );
+      const lesson = await Lesson.findByIdAndUpdate(homework.lesson, {
+        $push: { homework: homework._id },
+      });
+
+      return res
+        .status(201)
+        .send({ error: false, message: "Homework created", homework });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -424,16 +532,24 @@ courseRouter.post(
       return res
         .status(400)
         .send({ error: true, message: error.details[0].message });
-    const exam = await new Exam({ ...req.body }).save();
-    const phase = await Phase.updateOne(
-      { _id: exam.phase },
-      { $push: { finalExam: exam._id } }
-    );
-    res.status(201).send({
-      error: false,
-      message: "Exam created",
-      exam,
-    });
+    try {
+      const exam = await new Exam({ ...req.body }).save();
+
+      // const phase = await Phase.updateOne(
+      //   { _id: exam.phase },
+      //   { $push: { finalExam: exam._id } }
+      // );
+      const phase = await Phase.findByIdAndUpdate(exam.phase, {
+        $push: { finalExam: exam._id },
+      });
+
+      return res
+        .status(201)
+        .send({ error: false, message: "Exam created", exam });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -470,72 +586,97 @@ courseRouter.post(
   isAuth,
   expressAsyncHandler(async (req, res) => {
     const { error } = SubscribeValidate(req.body);
-    if (error)
-      return res
-        .status(400)
-        .send({ error: true, message: error.details[0].message });
-    const course = await Course.findOne({ _id: req.params.id });
-    const student = await Student.findOne({ _id: req.body.studentId });
-    // if (!student)
-    //   return res.status(404).send({ message: "Please login first" }); // redirect
-    if (course.stage > student.stage) {
-      return res.send({ message: "Your stage is lower" });
+    if (error) {
+      const errorMessage = error.details[0].message;
+      return res.status(400).send({ error: true, message: errorMessage });
     }
-    if (student.name !== req.body.name || student.email !== req.body.email) {
-      res.status(400).send({
-        message: `Your vitals do not match`,
-      });
-    } else {
-      const newPending = await new Pending({
-        studentId: req.body.studentId,
-        name: req.body.name,
-        email: req.body.email,
-        phone: req.body.phone,
-        courseId: req.params.id,
-      }).save();
-      res.status(201).send({
-        message: `Your request to subscribe to ${course.title} has been sent`,
-      });
+
+    try {
+      const course = await Course.findOne({ _id: req.params.id });
+
+      const student = await Student.findOne({ _id: req.body.studentId });
+
+      // Uncomment the following block if missing student should result in a 404 response
+      // if (!student) {
+      //   return res.status(404).send({ message: "Please login first" });
+      // }
+
+      if (course.stage > student.stage) {
+        return res.status(200).send({ message: "Your stage is lower" });
+      }
+
+      if (student.name !== req.body.name || student.email !== req.body.email) {
+        return res.status(400).send({
+          message: "Your vitals do not match",
+        });
+      } else {
+        const newPending = await new Pending({
+          studentId: req.body.studentId,
+          name: req.body.name,
+          email: req.body.email,
+          phone: req.body.phone,
+          courseId: req.params.id,
+        }).save();
+        return res.status(201).send({
+          message: `Your request to subscribe to ${course.title} has been sent`,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      return res
+        .status(500)
+        .send({ error: true, message: "Internal server error" });
     }
   })
 );
 
 courseRouter.get("/byCategory/:category", async (req, res) => {
-  const category = req.params.category;
+  try {
+    const category = req.params.category;
 
-  if (!category) {
-    res.send([]);
-    return;
+    if (!category) return res.send([]);
+
+    const courses = await Course.find({ courseCategory: category });
+
+    return res.status(200).send(courses);
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .send({ error: true, message: "Internal server error" });
   }
-
-  const courses = await Course.find({
-    courseCategory: category,
-  });
-  res.send(courses);
 });
 
 courseRouter.get("/byStage/:stage", async (req, res) => {
-  const stage = req.params.stage;
-  console.log(stage);
+  try {
+    const stage = req.params.stage;
 
-  if (!stage) {
-    res.send([]);
-    return;
+    if (!stage) return res.status(400).send([]);
+
+    const courses = await Course.find({
+      courseStage: stage,
+    });
+
+    return res.status(200).send(courses);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: true, message: "Internal server error" });
   }
-
-  const courses = await Course.find({
-    courseStage: stage,
-  });
-  res.send(courses);
 });
 
 courseRouter.get("/byRaiting/:rating", async (req, res) => {
-  const rating = Number(req.params.rating) || 0;
+  try {
+    const rating = Number(req.params.rating) || 0;
 
-  const courses = await Course.find({
-    rating: { $gte: rating },
-  });
-  res.send(courses);
+    const courses = await Course.find({
+      rating: { $gte: rating },
+    });
+
+    return res.status(200).send(courses);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: true, message: "Internal server error" });
+  }
 });
 
 export default courseRouter;

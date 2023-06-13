@@ -16,40 +16,26 @@ export const checkPassword = async (reqPassword, user) => {
 
 export const getUser = async (email) => {
   const teacher = await Teacher.findOne({ email });
-  if (teacher) {
-    return teacher;
-  }
+  if (teacher) return teacher;
 
   const student = await Student.findOne({ email });
-  if (student) {
-    return student;
-  }
+  if (student) return student;
 
   const admin = await Admin.findOne({ email });
   const company = await Company.findOne({ email });
-  if (admin.email === company.email) {
-    return admin;
-  }
+  if (admin.email === company.email) return admin;
 };
 
 export const getSocialUser = async (email) => {
   const teacher = await SocialTeacher.findOne({ email });
-  if (teacher) {
-    return teacher;
-  }
+  if (teacher) return teacher;
 
   const student = await SocialStudent.findOne({ email });
-  if (student) {
-    return student;
-  }
+  if (student) return student;
 };
 
 export const defineSocialUser = async (type) => {
-  if (type === "teacher") {
-    return SocialTeacher;
-  }
+  if (type === "teacher") return SocialTeacher;
 
-  if (type === "student") {
-    return SocialStudent;
-  }
+  if (type === "student") return SocialStudent;
 };

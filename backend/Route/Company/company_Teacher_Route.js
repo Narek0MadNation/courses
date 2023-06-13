@@ -19,20 +19,34 @@ company_Teacher_Router.post(
       return res
         .status(400)
         .send({ error: true, message: error.details[0].message });
-    const profile = await Company_Teacher.findOneAndUpdate(
-      // { _id: req.body._id },
-      { _id: req.params.id },
-      { ...req.body }
-    );
-    res.status(202).send({ profile, message: "Profile updated" });
+
+    try {
+      const profile = await Company_Teacher.findOneAndUpdate(
+        { _id: req.params.id },
+        { ...req.body }
+      );
+
+      return res.status(202).send({ profile, message: "Profile updated" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
 company_Teacher_Router.get(
   "/:id",
   expressAsyncHandler(async (req, res) => {
-    const user = await Company_Teacher.findById(req.params.id);
-    user ? res.send(user) : res.status(404).send({ message: "User not found" });
+    try {
+      const user = await Company_Teacher.findById(req.params.id);
+
+      user
+        ? res.send(user)
+        : res.status(404).send({ message: "User not found" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -42,81 +56,104 @@ company_Teacher_Router.get(
     const page = req.query.page || 0;
     const limit = 4;
 
-    const course = await Course.find({ teacher: req.params.id })
-      .skip(page * limit)
-      .limit(limit);
-    res.send(course);
-    return;
+    try {
+      const course = await Course.find({ teacher: req.params.id })
+        .skip(page * limit)
+        .limit(limit);
+
+      return res.status(200).send(course);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
 company_Teacher_Router.get(
   "/:id/students",
   expressAsyncHandler(async (req, res) => {
-    const course = await Course.find({ teacher: req.params.id });
-    const teacherCourse = course.map((el) => el._id);
-    const subscribtions = await Subscribe.find({
-      courseId: teacherCourse,
-    });
+    try {
+      const course = await Course.find({ teacher: req.params.id });
+      const teacherCourseIds = course.map((course) => course._id);
+      const subscribtions = await Subscribe.find({
+        courseId: { $in: teacherCourseIds },
+      });
+      // !subscribtions.length
+      if (subscribtions.length === 0)
+        return res.status(404).send({ message: "No subscribtions yet" });
 
-    if (!subscribtions)
-      return res.status(404).send({ message: "No subscribtions yet" });
-
-    res.status(200).send(subscribtions);
+      return res.status(200).send(subscribtions);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
 company_Teacher_Router.get(
   "/:id/pending",
   expressAsyncHandler(async (req, res) => {
-    const course = await Course.find({ teacher: req.params.id });
-    const teacherCourse = course.map((el) => el._id);
-    const pendings = await Pending.find({ courseId: teacherCourse });
+    try {
+      const course = await Course.find({ teacher: req.params.id });
+      const courseIds = course.map((course) => course._id);
+      const pendings = await Pending.find({ courseId: { $in: courseIds } });
 
-    if (!pendings) return res.status(404).send({ message: "No pendings yet" });
+      if (pendings.length === 0)
+        return res.status(404).send({ message: "No pendings yet" });
 
-    res.status(200).send(pendings);
+      return res.status(200).send(pendings);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
 company_Teacher_Router.post(
   "/:id/pending/approve",
   expressAsyncHandler(async (req, res) => {
-    const pending = await Pending.findById(req.body._id);
-    if (pending) {
-      await Subscribe({
-        studentId: pending.studentId,
-        name: pending.name,
-        email: pending.email,
-        phone: pending.phone,
-        courseId: pending.courseId,
-        subscribedAt: pending.requestedAt,
-      }).save();
-      pending.deleteOne();
-      const company = await Company.findOneAndUpdate(
-        { courses: pending.courseId },
-        { $push: { students: pending.studentId } }
-      );
-      console.log(company);
-      res.status(200).send({ message: `Subscription approaved` });
+    try {
+      const pending = await Pending.findById(req.body._id);
+
+      if (pending) {
+        await new Subscribe({
+          studentId: pending.studentId,
+          name: pending.name,
+          email: pending.email,
+          phone: pending.phone,
+          courseId: pending.courseId,
+          subscribedAt: pending.requestedAt,
+        }).save();
+        pending.deleteOne();
+
+        const company = await Company.findOneAndUpdate(
+          { courses: pending.courseId },
+          { $push: { students: pending.studentId } }
+        );
+
+        return res.status(200).send({ message: "Subscription approaved" });
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
     }
   })
 );
 
-company_Teacher_Router.get(
-  "/:id/schedule",
-  expressAsyncHandler(async (req, res) => {
-    const schedule = await Schedule.findOne({ teacher: req.params.id });
-    if (!schedule) {
-      const schedule = await new Schedule({
-        ...req.body,
-        teacher: req.params.id,
-      }).save();
-      return res.status(200).send(schedule);
-    }
-    res.status(200).send(schedule);
-  })
-);
+// company_Teacher_Router.get(
+//   "/:id/schedule",
+//   expressAsyncHandler(async (req, res) => {
+//     const schedule = await Schedule.findOne({ teacher: req.params.id });
+//     if (!schedule) {
+//       const schedule = await new Schedule({
+//         ...req.body,
+//         teacher: req.params.id,
+//       }).save();
+//       return res.status(200).send(schedule);
+//     }
+//     res.status(200).send(schedule);
+//   })
+// );
 
 // company_Teacher_Router.post(
 //   "/:id/schedule/create",
@@ -128,28 +165,28 @@ company_Teacher_Router.get(
 //   })
 // );
 
-company_Teacher_Router.post(
-  "/:id/schedule/assign",
-  expressAsyncHandler(async (req, res) => {
-    const schedule = await Schedule.findOne({ teacher: req.params.id });
-    if (schedule) {
-      const time = [...req.body];
-      const insert = await Schedule_Time.insertMany(time);
-      res.status(201).send(insert);
-    }
-  })
-);
+// company_Teacher_Router.post(
+//   "/:id/schedule/assign",
+//   expressAsyncHandler(async (req, res) => {
+//     const schedule = await Schedule.findOne({ teacher: req.params.id });
+//     if (schedule) {
+//       const time = [...req.body];
+//       const insert = await Schedule_Time.insertMany(time);
+//       res.status(201).send(insert);
+//     }
+//   })
+// );
 
-company_Teacher_Router.post(
-  "/:id/schedule/:day",
-  expressAsyncHandler(async (req, res) => {
-    const schedule = await Schedule.updateOne(
-      { teacher: req.params.id },
-      { $push: { [req.params.day]: { ...req.body } } }
-    );
-    res.status(201).send({ schedule, message: "Schedule created" });
-  })
-);
+// company_Teacher_Router.post(
+//   "/:id/schedule/:day",
+//   expressAsyncHandler(async (req, res) => {
+//     const schedule = await Schedule.updateOne(
+//       { teacher: req.params.id },
+//       { $push: { [req.params.day]: { ...req.body } } }
+//     );
+//     res.status(201).send({ schedule, message: "Schedule created" });
+//   })
+// );
 
 //???
 company_Teacher_Router.get(

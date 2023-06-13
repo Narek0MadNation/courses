@@ -51,12 +51,18 @@ companyRouter.post(
       return res
         .status(400)
         .send({ error: true, message: error.details[0].message });
-    const profile = await Company.findOneAndUpdate(
-      // { _id: req.body._id },
-      { _id: req.params.id },
-      { ...req.body }
-    );
-    res.status(202).send({ profile, message: "Profile updated" });
+
+    try {
+      const profile = await Company.findOneAndUpdate(
+        { _id: req.params.id },
+        { ...req.body }
+      );
+
+      res.status(200).send({ profile, message: "Profile updated" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -97,20 +103,29 @@ companyRouter.post(
       return res
         .status(400)
         .send({ error: true, message: error.details[0].message });
-    const teacherExists = await Company_Teacher.findOne({
-      email: req.body.email,
-    });
-    if (teacherExists) return res.json({ message: "Teacher already exist" });
-    const teacher = await new Company_Teacher({
-      ...req.body,
-      company: req.params.id,
-    }).save();
-    const company = await Company.updateOne(
-      { _id: teacher.company },
-      { $push: { teachers: teacher._id } }
-    );
-    console.log(teacher);
-    res.status(201).send({ error: false, message: "Teacher created" });
+    try {
+      const teacherExists = await Company_Teacher.findOne({
+        email: req.body.email,
+      });
+      if (teacherExists) return res.json({ message: "Teacher already exist" });
+
+      const teacher = await new Company_Teacher({
+        ...req.body,
+        company: req.params.id,
+      }).save();
+
+      const company = await Company.updateOne(
+        { _id: teacher.company },
+        { $push: { teachers: teacher._id } }
+      );
+
+      console.log(teacher);
+
+      res.status(201).send({ error: false, message: "Teacher created" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -139,10 +154,16 @@ companyRouter.post(
 companyRouter.get(
   "/:id",
   expressAsyncHandler(async (req, res) => {
-    const company = await Company.findById(req.params.id);
-    company
-      ? res.send(company)
-      : res.status(404).send({ message: "Company not found" });
+    try {
+      const company = await Company.findById(req.params.id);
+
+      company
+        ? res.send(company)
+        : res.status(404).send({ message: "Company not found" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -174,11 +195,16 @@ companyRouter.get(
     const page = req.query.page || 0;
     const limit = 4;
 
-    const course = await Course.find({ company: req.params.id })
-      .skip(page * limit)
-      .limit(limit);
-    res.status(200).send(course);
-    return;
+    try {
+      const course = await Course.find({ company: req.params.id })
+        .skip(page * limit)
+        .limit(limit);
+
+      return res.status(200).send(course);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -213,11 +239,17 @@ companyRouter.get(
 companyRouter.post(
   "/:id/course/assign_teacher",
   expressAsyncHandler(async (req, res) => {
-    const course = await Course.findOneAndUpdate(
-      { _id: req.body._id },
-      { teacher: req.body.teacher }
-    );
-    res.status(200).send(course);
+    try {
+      const course = await Course.findOneAndUpdate(
+        { _id: req.body._id },
+        { teacher: req.body.teacher }
+      );
+
+      return res.status(200).send(course);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -247,8 +279,16 @@ companyRouter.get(
   "/:id/students",
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    const company = await Company.findById(req.params.id).populate("students");
-    res.status(200).send(company.students);
+    try {
+      const company = await Company.findById(req.params.id).populate(
+        "students"
+      );
+
+      return res.status(200).send(company.students);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -278,8 +318,16 @@ companyRouter.get(
   "/:id/teachers",
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    const company = await Company.findById(req.params.id).populate("teachers");
-    res.status(200).send(company.teachers);
+    try {
+      const company = await Company.findById(req.params.id).populate(
+        "teachers"
+      );
+
+      return res.status(200).send(company.teachers);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
@@ -309,9 +357,14 @@ companyRouter.get(
   "/:id/courses",
   isAdmin,
   expressAsyncHandler(async (req, res) => {
-    const company = await Company.findById(req.params.id).populate("courses");
-    console.log(company);
-    res.status(200).send(company.courses);
+    try {
+      const company = await Company.findById(req.params.id).populate("courses");
+
+      return res.status(200).send(company.courses);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 

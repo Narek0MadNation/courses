@@ -43,17 +43,29 @@ subscribeRouter.post(
       return res
         .status(400)
         .send({ error: true, message: error.details[0].message });
-    const course = await Course.findOne({ _id: req.body.courseId });
-    const user = await Student.findOne({ _id: req.body.userId });
-    if (!user)
-      return res.status(404).send({ message: "Please register first" }); // redirect
-    if (course.courseStage > user.stage)
-      return res.send({ message: "Your stage is lower" });
-    // const subscription = await Subscribe.findOne({ userId: req.body.userId });
-    const newSubscription = await new Subscribe({ ...req.body }).save();
-    res
-      .status(201)
-      .send({ message: `You subscribed to ${course.courseTitle}` });
+
+    try {
+      const course = await Course.findOne({ _id: req.body.courseId });
+
+      const user = await Student.findOne({ _id: req.body.userId });
+
+      if (!user)
+        return res.status(404).send({ message: "Please register first" }); // redirect
+
+      if (course.courseStage > user.stage)
+        return res.status(400).send({ message: "Your stage is lower" });
+
+      // const subscription = await Subscribe.findOne({ userId: req.body.userId });
+
+      const newSubscription = await new Subscribe({ ...req.body }).save();
+
+      res
+        .status(201)
+        .send({ message: `You subscribed to ${course.courseTitle}` });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send({ error: true, message: "Internal server error" });
+    }
   })
 );
 
