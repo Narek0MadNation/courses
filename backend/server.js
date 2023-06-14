@@ -7,8 +7,8 @@ import expressSession from "express-session";
 import passport from "passport";
 
 import Connection from "./Utils/connection.js";
-import { credentials } from "./config/credentials.js";
-import { corsOptions } from "./config/corsOptions.js";
+import { credentials } from "./Config/credentials.js";
+import { corsOptions } from "./Config/corsOptions.js";
 
 import swaggerUI from "swagger-ui-express";
 import { specs } from "./Utils/swagger.js";
