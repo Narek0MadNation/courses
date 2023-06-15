@@ -57,7 +57,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use(
-  "/api-docs",
+  "/api/api-docs",
   swaggerUI.serve,
   swaggerUI.setup(specs, { explorer: true })
 );
