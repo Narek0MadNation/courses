@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
 import Admin from "../Model/CompanyModel/adminModel.js";
 import Company from "../Model/CompanyModel/companyModel.js";
-import Student from "../Model/userModel/studentModel.js";
-import Teacher from "../Model/userModel/teacherModel.js";
+import Student from "../Model/UserModel/studentModel.js";
+import Teacher from "../Model/UserModel/teacherModel.js";
 import { generateToken } from "../Utils/token.js";
 import SocialTeacher from "../Model/UserSocialModel/teacherModel.js";
 import SocialStudent from "../Model/UserSocialModel/studentModel.js";

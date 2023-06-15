@@ -1,7 +1,7 @@
 import express from "express";
 import expressAsyncHandler from "express-async-handler";
 import Subscribe from "../../Model/SubscribeModel/subscribeModel.js";
-import Student from "../../Model/userModel/studentModel.js";
+import Student from "../../Model/UserModel/studentModel.js";
 import Course from "../../Model/CourseModel/courseModel.js";
 import { SubscribeValidate } from "../../Utils/joi.js";
 

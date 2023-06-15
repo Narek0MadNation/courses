@@ -1,8 +1,6 @@
 import express from "express";
 import expressAsyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
-import Student from "../../Model/userModel/studentModel.js";
-import Teacher from "../../Model/userModel/teacherModel.js";
 import Company from "../../Model/CompanyModel/companyModel.js";
 import Admin from "../../Model/CompanyModel/adminModel.js";
 import { checkPassword, getUser } from "../../Middleware/log.js";

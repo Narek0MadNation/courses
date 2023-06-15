@@ -1,7 +1,7 @@
 import express from "express";
 import expressAsyncHandler from "express-async-handler";
 import { TeacherProfileValidate } from "../../Utils/joi.js";
-import Teacher from "../../Model/userModel/teacherModel.js";
+import Teacher from "../../Model/UserModel/teacherModel.js";
 import Course from "../../Model/CourseModel/courseModel.js";
 import Schedule from "../../Model/ScheduleModel/scheduleModel.js";
 import Subscribe from "../../Model/SubscribeModel/subscribeModel.js";

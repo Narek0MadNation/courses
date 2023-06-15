@@ -14,8 +14,8 @@ import Lesson from "../../Model/CourseModel/lessonModel.js";
 import Homework from "../../Model/CourseModel/homeworkModel.js";
 import Exam from "../../Model/CourseModel/examModel.js";
 import { isAuth } from "../../Middleware/isAuth.js";
-import Teacher from "../../Model/userModel/teacherModel.js";
-import Student from "../../Model/userModel/studentModel.js";
+import Teacher from "../../Model/UserModel/teacherModel.js";
+import Student from "../../Model/UserModel/studentModel.js";
 import Pending from "../../Model/SubscribeModel/pendingModel.js";
 import Company from "../../Model/CompanyModel/companyModel.js";
 
