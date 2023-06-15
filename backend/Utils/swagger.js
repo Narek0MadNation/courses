@@ -9,7 +9,7 @@ export const options = {
       version: "1.0.0",
       description: "Platform for online courses",
     },
-    servers: [{ url: "http://localhost:5000" }],
+    servers: [{ url: "http://178.160.195.53:5000" }],
     components: {
       logins: {
         Login: {
