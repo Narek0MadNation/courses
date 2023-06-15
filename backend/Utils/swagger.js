@@ -150,11 +150,8 @@ export const options = {
             email: { type: "string" },
             password: { type: "string" },
             role: {
-              type: "object",
-              properties: {
-                user: { type: "boolean", description: "default: true" },
-                admin: { type: "boolean", description: "default: false" },
-              },
+              type: "string",
+              description: "default: user",
             },
             avatar: { type: "string" },
             phone: { type: "string" },
@@ -176,11 +173,8 @@ export const options = {
             email: { type: "string" },
             password: { type: "string" },
             role: {
-              type: "object",
-              properties: {
-                user: { type: "boolean", description: "default: true" },
-                admin: { type: "boolean", description: "default: false" },
-              },
+              type: "string",
+              description: "default: teacher",
             },
             personalInfo: {
               type: "object",
@@ -249,11 +243,8 @@ export const options = {
             email: { type: "string" },
             password: { type: "string" },
             role: {
-              type: "object",
-              properties: {
-                user: { type: "string" },
-                admin: { type: "string" },
-              },
+              type: "string",
+              description: "default: user",
             },
             avatar: { type: "string" },
             phone: { type: "string" },
