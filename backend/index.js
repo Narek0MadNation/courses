@@ -15,7 +15,7 @@ import { specs } from "./Utils/swagger.js";
 
 import seedRouter from "./Route/Util/seedRoute.js";
 
-import { loginRouter, registerRouter } from "./Route/Login/logRegRoute.js";
+import { loginRouter, registerRouter } from "./Route/Login/authRoute.js";
 import facebookRouter from "./Utils/facebook.js";
 import googleRouter from "./Utils/google.js";
 import tokenRouter from "./Route/Login/tokenRoute.js";

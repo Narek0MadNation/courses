@@ -1,50 +1,25 @@
-import express from "express";
 import expressAsyncHandler from "express-async-handler";
-import bcrypt from "bcryptjs";
-import Company from "../../Model/CompanyModel/companyModel.js";
-import Admin from "../../Model/CompanyModel/adminModel.js";
-import { checkPassword, getUser } from "../../Middleware/log.js";
+import Company from "../Model/CompanyModel/companyModel.js";
+import Admin from "../Model/CompanyModel/adminModel.js";
+import { checkPassword, getUser } from "../Middleware/log.js";
 import {
   LoginValidate,
   RegisterCompanyValidate,
   RegisterValidate,
-} from "../../Utils/joi.js";
-import { checkUser, defineUser } from "../../Middleware/reg.js";
+} from "../Utils/joi.js";
+import { checkUser, defineUser } from "../Middleware/reg.js";
 
-export const loginRouter = express.Router();
-export const registerRouter = express.Router();
+class AuthController {
+  constructor() {
+    this.companyModel = Company;
+    this.adminModel = Admin;
 
-/**
- * @swagger
- * tags:
- *  name: Login/Register
- *  description: Login or Register Users/Company
- */
+    this.login = expressAsyncHandler(this.login.bind(this));
+    this.register = expressAsyncHandler(this.register.bind(this));
+    this.registerCompany = expressAsyncHandler(this.registerCompany.bind(this));
+  }
 
-/**
- * @swagger
- *  /api/login:
- *    post:
- *      summary: Log in
- *      tags: [Login/Register]
- *      requestBody:
- *        required: true
- *        content:
- *          application/json:
- *            schema:
- *              $ref: "#/components/logins/Login"
- *      responses:
- *        200:
- *          description: Success
- *          contents:
- *            application/json:
- *              schema:
- *                $ref: "#/components/schemas/Login"
- */
-
-loginRouter.post(
-  "/",
-  expressAsyncHandler(async (req, res) => {
+  login = async (req, res) => {
     const { error } = LoginValidate(req.body);
     if (error) {
       return res
@@ -62,7 +37,7 @@ loginRouter.post(
             httpOnly: true,
             sameSite: "none",
             maxAge: 24 * 60 * 60 * 1000,
-            secure: true, // Add secure flag for HTTPS
+            secure: true,
           });
           return res.status(200).send({ message: "Logged in", ...tokens });
         }
@@ -73,35 +48,9 @@ loginRouter.post(
       console.error(`Error during login: ${error}`);
       return res.status(500).send({ message: "Internal server error" });
     }
-  })
-);
+  };
 
-export default loginRouter;
-
-/**
- * @swagger
- *  /api/register:
- *    post:
- *      summary: Register User
- *      tags: [Login/Register]
- *      requestBody:
- *        required: true
- *        content:
- *          application/json:
- *            schema:
- *              $ref: "#/components/logins/Register"
- *      responses:
- *        200:
- *          description: Success
- *          contents:
- *            application/json:
- *              schema:
- *                $ref: "#/components/logins/Register"
- */
-
-registerRouter.post(
-  "/",
-  expressAsyncHandler(async (req, res) => {
+  register = async (req, res) => {
     const { error } = RegisterValidate(req.body);
     if (error)
       return res
@@ -121,49 +70,27 @@ registerRouter.post(
       console.error(`Error during login: ${error}`);
       return res.status(500).send({ message: "Internal server error" });
     }
-  })
-);
+  };
 
-/**
- * @swagger
- *  /api/register/company:
- *    post:
- *      summary: Register User
- *      tags: [Login/Register]
- *      requestBody:
- *        required: true
- *        content:
- *          application/json:
- *            schema:
- *              $ref: "#/components/logins/Register_Company"
- *      responses:
- *        200:
- *          description: Success
- *          contents:
- *            application/json:
- *              schema:
- *                $ref: "#/components/logins/Register_Company"
- */
-
-registerRouter.post(
-  "/company",
-  expressAsyncHandler(async (req, res) => {
+  registerCompany = async (req, res) => {
     const { error } = RegisterCompanyValidate(req.body);
     if (error)
       return res
         .status(400)
         .send({ error: true, message: error.details[0].message });
     try {
-      const companyExists = await Company.findOne({ email: req.body.email });
+      const companyExists = await this.companyModel.findOne({
+        email: req.body.email,
+      });
       if (companyExists) return res.json({ message: "Email already exist" });
       const hashPassword = bcrypt.hashSync(req.body.password);
 
-      const company = await new Company({
+      const company = await new this.companyModel({
         companyType: req.body.companyType,
         companyName: req.body.companyName,
         email: req.body.email,
       }).save();
-      const admin = await new Admin({
+      const admin = await new this.adminModel({
         adminType: req.body.adminType,
         name: req.body.name,
         email: req.body.email,
@@ -178,5 +105,9 @@ registerRouter.post(
       console.error(error);
       res.status(500).send({ error: true, message: "Internal server error" });
     }
-  })
-);
+  };
+}
+
+const authController = new AuthController();
+
+export default authController;
